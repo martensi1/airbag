@@ -4,20 +4,29 @@ Simple drop-in crash handler written in C for POSIX based systems. It allows for
 
 ## Usage
 
-Add the `airbag.c` and `airbag.h` files to your project.
+Add the `airbag.c` and `airbag.h` files to your project. Use the `airbag_init` function to install the crash handler and the `airbag_cleanup` function to remove it.
+
+## Example
+
+The following example demonstrates how to use the airbag library to capture crashes and log diagnostic information to a file.
 
 ```c
 #include "airbag.h"
+#include <stdio.h>
 
 int main() {
   // Install the crash handler
-  airbag_init();
+  FILE* file = fopen("airbag.out", "w");
+  int fd = fileno(file);
+
+  airbag_init(fd);
 
   // Your program logic goes here
   // ...
 
   // Removes the crash handler
   airbag_cleanup();
+  close(fd);
 }
 ```
 
