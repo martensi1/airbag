@@ -35,3 +35,4 @@ int main() {
 * https://www.man7.org/linux/man-pages/man7/signal.7.html
 * https://man7.org/linux/man-pages/man2/sigaction.2.html
 * https://man7.org/linux/man-pages/man7/signal-safety.7.html
+* https://man7.org/linux/man-pages/man3/backtrace.3.html
