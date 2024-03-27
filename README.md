@@ -26,7 +26,7 @@ int main() {
 
   // Removes the crash handler
   airbag_cleanup();
-  close(fd);
+  flose(file);
 }
 ```
 
