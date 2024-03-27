@@ -29,7 +29,7 @@ extern "C" {
 #endif
 
 void airbag_init(int fd);
-void airbag_cleanup();
+void airbag_cleanup(void);
 
 #ifdef __cplusplus
 extern "C" {

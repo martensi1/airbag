@@ -47,7 +47,7 @@
 #if defined(__GNUC__)
   #define FORCE_INLINE inline __attribute__((always_inline))
 #else
-  #define FORCE_INLINE inline
+  #error "Only GCC is supported"
 #endif
 
 #ifdef __cplusplus
@@ -168,43 +168,47 @@ static const char* get_signal_name(int signum)
   return "UNKNOWN";
 }
 
-static void handle_crash(siginfo_t* info)
+static void write_crash_dump(siginfo_t* info)
 {
   dwrite("===Airbag===\n");
-
   dwrite("Signal: ");
   dwrite(get_signal_name(info->si_signo));
-  dwrite("\n");
-
-  dwrite("PID: ");
+  dwrite("\nPID: ");
   dwriteint(getpid(), 10);
-  dwrite("\n");
-
-  dwrite("UID: ");
+  dwrite("\nUID: ");
   dwriteint(getuid(), 10);
-  dwrite("\n\n");
-
-  dwrite("Backtrace:\n");
+  dwrite("\n\nBacktrace:\n");
 
   void* array[10];
-  int size;
-
-  size = backtrace(array, 10);
+  
+  int size = backtrace(array, 10);
   backtrace_symbols_fd(array, size, airbag_fd);
 }
 
-static void handle_signal(const int signum, siginfo_t* info, void* context)
+static void on_fatal_signal(const int signum, siginfo_t* info, void* context)
 {
   static volatile sig_atomic_t first_call = 1;
 
   if (first_call) {
     first_call = 0;
-    handle_crash(info);
+    write_crash_dump(info);
   }
 
-  // Re-raise the signal to invoke the default signal handler
+  // We have done our job, now we can let the default signal handler take over
+  // Register the default signal handler and raise the signal again
   signal(signum, SIG_DFL);
   raise(signum);
+}
+
+static void make_backtrace_signal_safe(void)
+{
+  // backtrace() is not async-signal-safe. The reason for this is that it
+  // dynamically loads libgcc. This can be avoided if both libgcc and glibc
+  // is statically linked. The other solution is to call backtrace() once
+  // before the signal handler is set up (dynamic loading is only done once)
+  // https://www.gnu.org/software/libc/manual/html_node/Backtraces.html
+  void* dummy = NULL;
+  backtrace(&dummy, 1);
 }
 
 
@@ -214,12 +218,7 @@ static void handle_signal(const int signum, siginfo_t* info, void* context)
 void airbag_init(int fd)
 {
   airbag_fd = fd;
-
-  // Dummy backtrace to initialize the backtrace system
-  // This is necessary to make the backtrace function async-signal-safe,
-  // see more in man page for backtrace
-  void* dummy = NULL;
-  backtrace(&dummy, 1);
+  make_backtrace_signal_safe();
 
   // Set up signal handlers with extended signal handling (siginfo_t and context)
   // and dedicated/alternate signal stack
@@ -229,7 +228,7 @@ void airbag_init(int fd)
 
   struct sigaction action = (struct sigaction) {
     .sa_flags = flags,
-    .sa_sigaction = handle_signal
+    .sa_sigaction = on_fatal_signal
     // Do not assign .sa_handler, it will override
     // .sa_sigaction if they are implemented with a union
   };
@@ -246,7 +245,7 @@ void airbag_init(int fd)
   sigaction(SIGXFSZ, &action, NULL);
 }
 
-void airbag_cleanup()
+void airbag_cleanup(void)
 {
   airbag_fd = -1;
 
