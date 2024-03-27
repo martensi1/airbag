@@ -1,10 +1,94 @@
+////////////////////////////////////////////////////////////
+//
+// Airbag Crash Handler
+// Copyright (C) 2024 Simon Alm-Mårtensson
+//
+// This software is provided 'as-is', without any express or implied warranty.
+// In no event will the authors be held liable for any damages arising from the use of this software.
+//
+// Permission is granted to anyone to use this software for any purpose,
+// including commercial applications, and to alter it and redistribute it freely,
+// subject to the following restrictions:
+//
+// 1. The origin of this software must not be misrepresented;
+//    you must not claim that you wrote the original software.
+//    If you use this software in a product, an acknowledgment
+//    in the product documentation would be appreciated but is not required.
+//
+// 2. Altered source versions must be plainly marked as such,
+//    and must not be misrepresented as being the original software.
+//
+// 3. This notice may not be removed or altered from any source distribution.
+//
+////////////////////////////////////////////////////////////
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/mman.h>
 
 #include "../airbag.h"
 
 
+//---------------------------------------------------------
+// Crash functions
+//---------------------------------------------------------
+static void abort_program();
+static void access_violation();
+static void divide_by_zero();
+
+
+static int be_bad(const char* crash_type)
+{
+    if (strcmp(crash_type, "abort") == 0)
+    {
+      abort_program();
+    }
+    else if (strcmp(crash_type, "access-violation") == 0)
+    {
+      access_violation();
+    }
+    else if (strcmp(crash_type, "divide-by-zero") == 0)
+    {
+      divide_by_zero();
+    }
+    else if (strcmp(crash_type, "sigbus"))
+    {
+      FILE *f = tmpfile();
+      int *m = mmap(0, 4, PROT_WRITE, MAP_PRIVATE, fileno(f), 0);
+      *m = 0;
+      return 0;
+    }
+    else
+    {
+      printf("Unknown crash type: %s\n", crash_type);
+      return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
+}
+
+
+static void abort_program()
+{
+    abort();
+}
+
+static void access_violation()
+{
+    int* ptr = 0;
+    *ptr = 0;
+}
+
+static void divide_by_zero()
+{
+    int y = 0;
+    int x = 3 / y;
+}
+
+
+//---------------------------------------------------------
+// Main
+//---------------------------------------------------------
 const char* get_option(int argc, char* argv[], const char* option)
 {
   for (int i = 0; i < argc; i++)
@@ -18,40 +102,6 @@ const char* get_option(int argc, char* argv[], const char* option)
   return NULL;
 }
 
-
-static int be_bad(const char* crash_type, const char* output_file)
-{
-    FILE* file = fopen(output_file, "w");
-    int fd = fileno(file);
-
-    airbag_init(fd);
-
-    if (strcmp(crash_type, "abort") == 0)
-    {
-      abort();
-    }
-    else if (strcmp(crash_type, "access-violation") == 0)
-    {
-      int* ptr = 0;
-      *ptr = 0;
-    }
-    else if (strcmp(crash_type, "divide-by-zero") == 0)
-    {
-      int y = 0;
-      int x = 3 / y;
-    }
-    else
-    {
-      printf("Unknown crash type: %s\n", crash_type);
-      return EXIT_FAILURE;
-    }
-
-    // This point should never be reached
-    airbag_cleanup();
-    fclose(file);
-}
-
-
 int main(int argc, char* argv[])
 {
     const char* chrash_type = get_option(argc, argv, "-t");
@@ -63,6 +113,16 @@ int main(int argc, char* argv[])
       return 1;
     }
 
-    be_bad(chrash_type, output_file);
+    FILE* file = fopen(output_file, "w");
+    int fd = fileno(file);
+    airbag_init(fd);
+
+    int result = be_bad(chrash_type);
+
+    // This point should never be reached
+    airbag_cleanup();
+    fclose(file);
+
+    return result;
 }
 
