@@ -180,7 +180,7 @@ static void write_crash_dump(siginfo_t* info)
   dwrite("\n\nBacktrace:\n");
 
   void* array[10];
-  
+
   int size = backtrace(array, 10);
   backtrace_symbols_fd(array, size, airbag_fd);
 }
@@ -203,9 +203,9 @@ static void on_fatal_signal(const int signum, siginfo_t* info, void* context)
 static void make_backtrace_signal_safe(void)
 {
   // backtrace() is not async-signal-safe. The reason for this is that it
-  // dynamically loads libgcc. This can be avoided if both libgcc and glibc
-  // is statically linked. The other solution is to call backtrace() once
-  // before the signal handler is set up (dynamic loading is only done once)
+  // dynamically loads libgcc if needed  on first use. This can be avoided
+  // if both libgcc and glibc is statically linked. The other solution is
+  // to call backtrace() once before the signal handler is set up
   // https://www.gnu.org/software/libc/manual/html_node/Backtraces.html
   void* dummy = NULL;
   backtrace(&dummy, 1);
@@ -237,12 +237,8 @@ void airbag_init(int fd)
 
   sigaction(SIGBUS, &action, NULL);
   sigaction(SIGFPE, &action, NULL);
-  sigaction(SIGILL, &action, NULL);
   sigaction(SIGSEGV, &action, NULL);
-  sigaction(SIGSYS, &action, NULL);
-  sigaction(SIGTRAP, &action, NULL);
-  sigaction(SIGXCPU, &action, NULL);
-  sigaction(SIGXFSZ, &action, NULL);
+  sigaction(SIGABRT, &action, NULL);
 }
 
 void airbag_cleanup(void)
@@ -252,12 +248,8 @@ void airbag_cleanup(void)
   // Reset signal handlers to default
   signal(SIGBUS, SIG_DFL);
   signal(SIGFPE, SIG_DFL);
-  signal(SIGILL, SIG_DFL);
   signal(SIGSEGV, SIG_DFL);
-  signal(SIGSYS, SIG_DFL);
-  signal(SIGTRAP, SIG_DFL);
-  signal(SIGXCPU, SIG_DFL);
-  signal(SIGXFSZ, SIG_DFL);
+  signal(SIGABRT, SIG_DFL);
 }
 
 #ifdef __cplusplus
