@@ -113,10 +113,7 @@ static void bus_error()
 
 static void invalid_syscall()
 {
-  //syscall(2342347234);
-  prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT);
-  setuid(0);
-  getpid();
+  syscall(2342347234);
 }
 
 
