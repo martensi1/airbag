@@ -61,6 +61,7 @@ extern "C" {
 static int airbag_fd = -1;
 
 static const char* signal_names[] = {
+  NULL,
   "SIGHUP",    // 0 - Hangup
   "SIGINT",    // 1 - Interrupt
   "SIGQUIT",   // 2 - Quit
@@ -161,7 +162,7 @@ static void dwriteint(int value, int base)
 static const char* get_signal_name(int signum)
 {
   if (signum > 0 && signum <= sizeof(signal_names) / sizeof(signal_names[0])) {
-    return signal_names[signum-1];
+    return signal_names[signum];
   }
 
   return "UNKNOWN";
