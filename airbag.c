@@ -239,6 +239,9 @@ void airbag_init(int fd)
   sigaction(SIGFPE, &action, NULL);
   sigaction(SIGSEGV, &action, NULL);
   sigaction(SIGABRT, &action, NULL);
+  sigaction(SIGILL, &action, NULL);
+  sigaction(SIGSYS, &action, NULL);
+  sigaction(SIGXCPU, &action, NULL);
 }
 
 void airbag_cleanup(void)
@@ -250,6 +253,9 @@ void airbag_cleanup(void)
   signal(SIGFPE, SIG_DFL);
   signal(SIGSEGV, SIG_DFL);
   signal(SIGABRT, SIG_DFL);
+  signal(SIGILL, SIG_DFL);
+  signal(SIGSYS, SIG_DFL);
+  signal(SIGXCPU, SIG_DFL);
 }
 
 #ifdef __cplusplus

@@ -36,7 +36,9 @@ static const char* all_tests[] = {
   "abort",
   "access-violation",
   "divide-by-zero",
-  "sigbus"
+  "illegal-instruction",
+  "bus-error",
+  "system-call-bad-argument"
 };
 
 
@@ -51,7 +53,7 @@ static int get_file_size(FILE* file)
   return size;
 }
 
-static void remove_out_files()
+static void cleanup_dir()
 {
   DIR* dir = opendir("./");
 
@@ -111,14 +113,13 @@ static bool run_test(const char* test)
 
 int main()
 {
-  remove_out_files();
+  cleanup_dir();
 
   for (int i = 0; i < sizeof(all_tests) / sizeof(all_tests[0]); i++)
   {
     run_test(all_tests[i]);
   }
 
-  remove_out_files();
-
+  cleanup_dir();
   return EXIT_SUCCESS;
 }

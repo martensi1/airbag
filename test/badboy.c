@@ -24,7 +24,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/mman.h>
+#include <sys/prctl.h>
 
 #include "../airbag.h"
 
@@ -35,6 +37,9 @@
 static void abort_program();
 static void access_violation();
 static void divide_by_zero();
+static void illegal_instruction();
+static void bus_error();
+static void invalid_syscall();
 
 
 static int be_bad(const char* crash_type)
@@ -51,12 +56,17 @@ static int be_bad(const char* crash_type)
     {
       divide_by_zero();
     }
-    else if (strcmp(crash_type, "sigbus"))
+    else if (strcmp(crash_type, "illegal-instruction") == 0)
     {
-      FILE *f = tmpfile();
-      int *m = mmap(0, 4, PROT_WRITE, MAP_PRIVATE, fileno(f), 0);
-      *m = 0;
-      return 0;
+      illegal_instruction();
+    }
+    else if (strcmp(crash_type, "bus-error") == 0)
+    {
+      bus_error();
+    }
+    else if (strcmp(crash_type, "system-call-bad-argument") == 0)
+    {
+      invalid_syscall();
     }
     else
     {
@@ -83,6 +93,30 @@ static void divide_by_zero()
 {
     int y = 0;
     int x = 3 / y;
+}
+
+static void illegal_instruction()
+{
+#if defined(__i386__) || defined(__x86_64__)
+    asm("lgdt 0");
+#else
+    #error "No illegal instruction for arhitecture"
+#endif
+}
+
+static void bus_error()
+{
+    FILE *f = tmpfile();
+    int *m = mmap(0, 4, PROT_WRITE, MAP_PRIVATE, fileno(f), 0);
+    *m = 0;
+}
+
+static void invalid_syscall()
+{
+  //syscall(2342347234);
+  prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT);
+  setuid(0);
+  getpid();
 }
 
 
