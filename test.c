@@ -1,16 +1,26 @@
 #include "airbag.h"
 #include <stdio.h>
 
+void hej()
+{
+  int* ptr = 0;
+  *ptr = 0;
+}
+
+
+void try_to_crash()
+{
+  hej();
+}
 
 int main()
 {
-  FILE* file = fopen("log.txt", "w");
+  FILE* file = fopen("bin/airbag.out", "w");
   int fd = fileno(file);
 
   airbag_init(fd);
 
-  int* ptr = 0;
-  *ptr = 0;
+  try_to_crash();
 
   int y = 0;
   int x = 3 / y;

@@ -1,6 +1,6 @@
 CC := gcc
-CC_FLAGS := -Wall -Werror -g
-LD_FLAGS :=
+CC_FLAGS := -Wall -Werror -Wno-error=pointer-to-int-cast -g
+LD_FLAGS := -rdynamic
 
 OBJ_DIR := obj
 BIN_DIR := bin
