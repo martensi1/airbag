@@ -66,6 +66,11 @@ static void cleanup_dir()
 
   while ((entry = readdir(dir)) != NULL)
   {
+    if (entry->d_type != DT_REG)
+    {
+      continue;
+    }
+
     // remove all .out files
     if (strstr(entry->d_name, ".out") == NULL)
     {

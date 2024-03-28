@@ -30,6 +30,14 @@ int main() {
 }
 ```
 
+## Limitations
+
+The printed backtrace will not always be reliable/complete if the code has been optimized during compilation. For example:
+
+* Inlined functions will not appear in the backtrace (does not have stack frames)
+* Omission of frame pointers may cause the backtrace to be incomplete (which is common in optimized builds)
+* Tail-call optimization may cause the backtrace to be incomplete
+
 ## Resources
 
 * https://www.man7.org/linux/man-pages/man7/signal.7.html

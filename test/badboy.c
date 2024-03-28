@@ -113,6 +113,7 @@ static void bus_error()
 
 static void invalid_syscall()
 {
+  
   syscall(2342347234);
 }
 
