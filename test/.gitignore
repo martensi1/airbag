@@ -1,0 +1,3 @@
+bin/*
+obj/*
+.airbag.c

@@ -93,6 +93,7 @@ static void divide_by_zero()
 {
     int y = 0;
     int x = 3 / y;
+    (void)x;
 }
 
 static void illegal_instruction()
@@ -113,7 +114,7 @@ static void bus_error()
 
 static void invalid_syscall()
 {
-  
+
   syscall(2342347234);
 }
 

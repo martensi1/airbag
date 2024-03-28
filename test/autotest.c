@@ -83,7 +83,7 @@ static void cleanup_dir()
 
 
 
-static int exec_badboy(const char* crash_type, const char* filename)
+static void exec_badboy(const char* crash_type, const char* filename)
 {
   char command[256];
   strcpy(command, "bin/badboy -t ");
@@ -93,21 +93,19 @@ static int exec_badboy(const char* crash_type, const char* filename)
   strcat(command, " > /dev/null 2>&1");
 
   int ec = system(command);
-  return ec;
+  (void)ec;
 }
 
-static bool run_test(const char* test)
+static void run_test(const char* test)
 {
   char filename[256];
   strcpy(filename, test);
   strcat(filename, ".out");
 
-  int ec = exec_badboy(test, filename);
+  exec_badboy(test, filename);
 
   FILE* file = fopen(filename, "r");
-  
   bool dump_written = (file != NULL) && (get_file_size(file) > 0);
-  bool test_passed = dump_written;
 
   const char* result_text = dump_written ? "OK" : "FAIL";
   const char* result_color = dump_written ? HGRN : HRED;
